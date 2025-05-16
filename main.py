@@ -1,5 +1,5 @@
 import flet as ft
-
+from flet import icons 
 class UIcuy (ft.Container):
     def __init__ (self, page: ft.Page):
         super(). __init__ (expand = True)
@@ -25,6 +25,7 @@ class UIcuy (ft.Container):
                           bgcolor= self.container_color,
                           offset= ft.transform.Offset(0,0),
                           animate_offset=self.animation_style, 
+                          margin=15,
                           content= ft.Row(
                               controls = [
                                   ft.Container(
@@ -152,17 +153,7 @@ class UIcuy (ft.Container):
                                           ]
                                       )
                                   ),
-                                  ft.Container(
-                                      expand= True,
-                                      content= ft.Column(
-                                          controls=[
-                                              ft.Row(
-                                                  #height= 
-                                              )
-                                          ]
-                                      )
-                                      
-                                  )
+                            
                               ]
                           )       
                           )
