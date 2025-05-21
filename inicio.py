@@ -1,73 +1,158 @@
 import flet as ft
 
+class inicio(ft.Container):
+    def __init__(self, on_login_success):
+        super().__init__(expand=True)
+        self.on_login_success = on_login_success
 
-def main(page: ft.Page):
-    page.title = "Inicio de Sesión"
-    page.bgcolor = "#362e57"
-    page.vertical_alignment = ft.MainAxisAlignment.CENTER
-    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.padding = 20
-    page.window_width = 400
-    page.window_height = 400
+        self.bgcolor = "#3f3965"
+        self.xcolor = "#000000"
 
-    color1 = ft.colors.PURPLE_700
-    color2 = ft.colors.PURPLE_400
-    color3 = ft.colors.BLUE_600
-    color4 = ft.colors.BLUE_300
-    color_text = ft.colors.WHITE
+        self.color1 = ft.colors.PURPLE_700
+        self.color2 = ft.colors.PURPLE_400
+        self.color_text = self.xcolor
 
-    def on_login(e):
-        # Aquí puedes agregar lógica de autenticación
-        page.dialog = ft.AlertDialog(
-            title=ft.Text("Intento de Login"),
-            content=ft.Text(f"Usuario: {username.value}\nContraseña: {password.value}"),
-            actions=[ft.TextButton("Cerrar", on_click=lambda e: page.dialog.close())],
+        self.username = ft.TextField(
+            label="Usuario", width=300,
+            text_style=ft.TextStyle(color=self.color_text),
+            border_color=self.color2, focused_border_color=self.color1, cursor_color=self.color1
         )
-        page.dialog.open = True
-        page.update()
-
-    username = ft.TextField(
-        label="Usuario",
-        border_color=color2,
-        focused_border_color=color1,
-        cursor_color=color1,
-        text_style=ft.TextStyle(color=color_text),
-        width=300,
-        autofocus=True,
-    )
-    password = ft.TextField(
-        label="Contraseña",
-        border_color=color2,
-        focused_border_color=color1,
-        cursor_color=color1,
-        text_style=ft.TextStyle(color=color_text),
-        password=True,
-        can_reveal_password=True,
-        width=300,
-    )
-
-    login_button = ft.ElevatedButton(
-        text="Iniciar Sesión",
-        bgcolor=color1,
-        color=color_text,
-        width=300,
-        on_click=on_login,
-    )
-
-    page.add(
-        ft.Column(
-            controls=[
-                ft.Text("Bienvenido", size=32, weight="bold", color=color_text),
-                ft.Text("Por favor, ingresa tus datos para continuar", size=16, color=color_text),
-                username,
-                password,
-                login_button,
-            ],
-            alignment="center",
-            spacing=20,
-            horizontal_alignment="center",
+        self.password = ft.TextField(
+            label="Contraseña", width=300, password=True, can_reveal_password=True,
+            text_style=ft.TextStyle(color=self.color_text),
+            border_color=self.color2, focused_border_color=self.color1, cursor_color=self.color1
         )
-    )
 
+        login_btn = ft.ElevatedButton(
+            text="Iniciar Sesión", width=300,
+            bgcolor=self.color1, color=self.color_text,
+            on_click=self.on_login
+        )
 
-ft.app(target=main)
+        linea_gradiante = ft.Container(
+            height=3, width=300, border_radius=20,
+            gradient=ft.SweepGradient(
+                center=ft.alignment.center,
+                colors=[
+                    ft.colors.RED, ft.colors.ORANGE, ft.colors.YELLOW, ft.colors.GREEN,
+                    ft.colors.CYAN, ft.colors.BLUE, ft.colors.PURPLE, ft.colors.RED,
+                ]
+            )
+        )
+
+        crear_usuario_btn = ft.Container(
+            content=ft.TextButton(
+                text="Crear usuario",
+                on_click=lambda _: self.mostrar_crear_usuario(),
+                style=ft.ButtonStyle(color=self.color_text),
+            ),
+            width=300,
+            padding=ft.padding.all(2),
+            border_radius=10,
+            gradient=linea_gradiante.gradient,
+        )
+
+        self.login_ui = ft.Container(
+            bgcolor=self.bgcolor,
+            content=ft.Column(
+                controls=[
+                    ft.Text("Bienvenido", size=32, weight="bold", color=self.color_text),
+                    ft.Text("Por favor, ingresa tus datos", size=16, color=self.color_text),
+                    self.username,
+                    self.password,
+                    login_btn,
+                    ft.Text("o", color=self.color_text, size=20),
+                    linea_gradiante,
+                    crear_usuario_btn,
+                ],
+                alignment="center",
+                spacing=20,
+                horizontal_alignment="center"
+            ),
+            expand=True,
+            alignment=ft.alignment.center
+        )
+
+        self.crear_usuario_ui = self.vista_crear_usuario()
+
+        self.content = self.login_ui  
+
+    def on_login(self, e):
+        if self.username.value and self.password.value:
+            self.on_login_success()
+        else:
+            print("Faltan datos")
+
+    def mostrar_crear_usuario(self):
+        self.content = self.crear_usuario_ui
+        self.update()
+
+    def volver_al_login(self, e=None):
+        self.content = self.login_ui
+        self.update()
+
+    def guardar_usuario(self, e):
+        if all([self.email.value, self.new_username.value, self.new_password.value, self.finca_name.value]):
+            datos = {
+                "correo": self.email.value,
+                "usuario": self.new_username.value,
+                "contraseña": self.new_password.value,
+                "finca": self.finca_name.value
+            }
+            print("Usuario creado:", datos)
+            self.volver_al_login()
+        else:
+            print("Faltan datos para crear el usuario")
+
+    def vista_crear_usuario(self):
+        self.email = ft.TextField(
+            label="Correo electrónico", width=300,
+            text_style=ft.TextStyle(color=self.color_text),
+            border_color=self.color2, focused_border_color=self.color1, cursor_color=self.color1
+        )
+        self.new_username = ft.TextField(
+            label="Nombre de usuario", width=300,
+            text_style=ft.TextStyle(color=self.color_text),
+            border_color=self.color2, focused_border_color=self.color1, cursor_color=self.color1
+        )
+        self.new_password = ft.TextField(
+            label="Contraseña", width=300, password=True, can_reveal_password=True,
+            text_style=ft.TextStyle(color=self.color_text),
+            border_color=self.color2, focused_border_color=self.color1, cursor_color=self.color1
+        )
+        self.finca_name = ft.TextField(
+            label="Nombre de la finca", width=300,
+            text_style=ft.TextStyle(color=self.color_text),
+            border_color=self.color2, focused_border_color=self.color1, cursor_color=self.color1
+        )
+
+        guardar_btn = ft.ElevatedButton(
+            text="Guardar", width=300,
+            bgcolor=self.color1, color=self.color_text,
+            on_click=self.guardar_usuario
+        )
+
+        volver_btn = ft.TextButton(
+            text="Volver", on_click=self.volver_al_login,
+            style=ft.ButtonStyle(color=self.color_text)
+        )
+
+        return ft.Container(
+            bgcolor=self.bgcolor,
+            content=ft.Column(
+                controls=[
+                    ft.Text("Crear nuevo usuario", size=28, weight="bold", color=self.color_text),
+                    self.email,
+                    self.new_username,
+                    self.new_password,
+                    self.finca_name,
+                    guardar_btn,
+                    volver_btn
+                ],
+                alignment="center",
+                spacing=20,
+                horizontal_alignment="center"
+            ),
+            expand=True,
+            alignment=ft.alignment.center
+        )
