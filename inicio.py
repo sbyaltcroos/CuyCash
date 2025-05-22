@@ -1,4 +1,5 @@
 import flet as ft
+import httpx
 
 class inicio(ft.Container):
     def __init__(self, on_login_success):
@@ -78,10 +79,44 @@ class inicio(ft.Container):
         self.content = self.login_ui  
 
     def on_login(self, e):
-        if self.username.value and self.password.value:
-            self.on_login_success()
-        else:
-            print("Faltan datos")
+        def mostrar_alerta(mensaje, color):
+            dialogo = ft.AlertDialog(
+                title=ft.Text("Aviso"),
+                content=ft.Text(mensaje),
+                actions=[ft.TextButton("Cerrar", on_click=lambda _: self.page.close(dialogo))],
+                actions_alignment="end",
+                bgcolor=color
+            )
+            self.page.open(dialogo)
+            self.page.update()
+
+        usuario = self.username.value.strip()
+        contraseña = self.password.value.strip()
+
+        # Validaciones locales
+        if not usuario or not contraseña:
+            mostrar_alerta("Todos los campos son obligatorios", ft.colors.RED_400)
+            return
+
+        data = {
+            "usuario": usuario,
+            "contraseña": contraseña
+        }
+
+        try:
+            response = httpx.post("http://localhost:8000/login", json=data)
+            if response.status_code == 200:
+                self.on_login_success()
+            else:
+                try:
+                    error_detail = response.json().get("detail", "Error desconocido")
+                except Exception:
+                    error_detail = response.text or "Respuesta no válida del servidor"
+                mostrar_alerta(f"Error: {error_detail}", ft.colors.RED_400)
+        except Exception as ex:
+            mostrar_alerta(f"Error al conectar con el backend: {ex}", ft.colors.RED_400)
+
+
 
     def mostrar_crear_usuario(self):
         self.content = self.crear_usuario_ui
@@ -92,17 +127,60 @@ class inicio(ft.Container):
         self.update()
 
     def guardar_usuario(self, e):
-        if all([self.email.value, self.new_username.value, self.new_password.value, self.finca_name.value]):
-            datos = {
-                "correo": self.email.value,
-                "usuario": self.new_username.value,
-                "contraseña": self.new_password.value,
-                "finca": self.finca_name.value
-            }
-            print("Usuario creado:", datos)
-            self.volver_al_login()
-        else:
-            print("Faltan datos para crear el usuario")
+        def mostrar_alerta(mensaje, color):
+            dialogo = ft.AlertDialog(
+                title=ft.Text("Aviso"),
+                content=ft.Text(mensaje),
+                actions=[ft.TextButton("Cerrar", on_click=lambda _: self.page.close(dialogo))],
+                actions_alignment="end",
+                bgcolor=color
+            )
+            self.page.open(dialogo)
+            self.page.update()
+
+        # Obtener valores
+        correo = self.email.value.strip()
+        usuario = self.new_username.value.strip()
+        contraseña = self.new_password.value.strip()
+        finca = self.finca_name.value.strip()
+
+        # Validaciones locales
+        if not all([correo, usuario, contraseña, finca]):
+            mostrar_alerta("Todos los campos son obligatorios", ft.colors.RED_400)
+            return
+
+        if "@" not in correo or "." not in correo:
+            mostrar_alerta("Correo electrónico inválido", ft.colors.RED_400)
+            return
+
+        if len(contraseña) <= 6:
+            mostrar_alerta("La contraseña debe tener más de 6 caracteres", ft.colors.RED_400)
+            return
+
+        # Preparar datos
+        data = {
+            "correo": correo,
+            "usuario": usuario,
+            "contraseña": contraseña,
+            "finca": finca
+        }
+
+        # Enviar al backend
+        try:
+            response = httpx.post("http://localhost:8000/registro", json=data)
+            if response.status_code == 200:
+                mostrar_alerta("Usuario creado con éxito", ft.colors.GREEN_400)
+                self.volver_al_login()
+            else:
+                try:
+                    error_detail = response.json().get("detail", "Error desconocido")
+                except Exception:
+                    error_detail = response.text or "Respuesta no válida del servidor"
+                mostrar_alerta(f"Error: {error_detail}", ft.colors.RED_400)
+        except Exception as ex:
+            mostrar_alerta(f"Error al conectar con el backend: {ex}", ft.colors.RED_400)
+
+
 
     def vista_crear_usuario(self):
         self.email = ft.TextField(
